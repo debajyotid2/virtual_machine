@@ -3,11 +3,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define VM_STACK_CAPACITY 1
+#define VM_STACK_CAPACITY 1024
 
 typedef int64_t Word;
 
-typedef enum { ERR_OK = 0, ERR_STACK_OVERFLOW, ERR_STACK_UNDERFLOW, ERR_ILLEGAL_INST } Err;
+typedef enum { ERR_OK = 0, ERR_STACK_OVERFLOW, ERR_STACK_UNDERFLOW, ERR_ILLEGAL_INST, ERR_DIV_BY_ZERO } Err;
 
 const char *error_as_cstr(Err error) {
     switch (error) {
@@ -19,6 +19,8 @@ const char *error_as_cstr(Err error) {
         return "ERR_STACK_UNDERFLOW";
     case ERR_ILLEGAL_INST:
         return "ERR_ILLEGAL_INST";
+    case ERR_DIV_BY_ZERO:
+        return "ERR_DIV_BY_ZERO";
     default:
         assert(0 && "error_as_cstr: Unreachable");
     }
@@ -29,10 +31,7 @@ typedef struct {
     size_t stack_size;
 } VM;
 
-typedef enum {
-    INST_PUSH,
-    INST_PLUS,
-} InstType;
+typedef enum { INST_PUSH, INST_PLUS, INST_MINUS, INST_MULT, INST_DIV } InstType;
 
 typedef struct {
     InstType type;
@@ -41,6 +40,26 @@ typedef struct {
 
 #define MAKE_INST_PUSH(op) {.type = INST_PUSH, .operand = (op)}
 #define MAKE_INST_PLUS {.type = INST_PLUS}
+#define MAKE_INST_MINUS {.type = INST_MINUS}
+#define MAKE_INST_MULT {.type = INST_MULT}
+#define MAKE_INST_DIV {.type = INST_DIV}
+
+const char *inst_type_as_cstr(InstType type) {
+    switch (type) {
+    case INST_PUSH:
+        return "INST_PUSH";
+    case INST_PLUS:
+        return "INST_PLUS";
+    case INST_MINUS:
+        return "INST_MINUS";
+    case INST_MULT:
+        return "INST_MULT";
+    case INST_DIV:
+        return "INST_DIV";
+    default:
+        assert(0 && "inst_type_as_cstr: Unreachable");
+    }
+}
 
 Err vm_execute_inst(VM *vm, Inst inst) {
     switch (inst.type) {
@@ -55,6 +74,30 @@ Err vm_execute_inst(VM *vm, Inst inst) {
             return ERR_STACK_UNDERFLOW;
         }
         vm->stack[vm->stack_size - 2] += vm->stack[vm->stack_size - 1];
+        vm->stack_size -= 1;
+        break;
+    case INST_MINUS:
+        if (vm->stack_size < 2) {
+            return ERR_STACK_UNDERFLOW;
+        }
+        vm->stack[vm->stack_size - 2] -= vm->stack[vm->stack_size - 1];
+        vm->stack_size -= 1;
+        break;
+    case INST_MULT:
+        if (vm->stack_size < 2) {
+            return ERR_STACK_UNDERFLOW;
+        }
+        vm->stack[vm->stack_size - 2] *= vm->stack[vm->stack_size - 1];
+        vm->stack_size -= 1;
+        break;
+    case INST_DIV:
+        if (vm->stack_size < 2) {
+            return ERR_STACK_UNDERFLOW;
+        }
+        if (vm->stack[vm->stack_size - 1] == 0) {
+            return ERR_DIV_BY_ZERO;
+        }
+        vm->stack[vm->stack_size - 2] /= vm->stack[vm->stack_size - 1];
         vm->stack_size -= 1;
         break;
     default:
@@ -77,18 +120,15 @@ void vm_dump(FILE *stream, const VM *vm) {
 #define ARRAY_SIZE(arg) (sizeof(arg) / sizeof((arg)[0]))
 
 VM vm = {0};
-Inst program[] = {
-    MAKE_INST_PUSH(68),
-    MAKE_INST_PUSH(42),
-    MAKE_INST_PLUS,
-};
+Inst program[] = {MAKE_INST_PUSH(68), MAKE_INST_PUSH(42), MAKE_INST_PLUS, MAKE_INST_PUSH(-12), MAKE_INST_MINUS, MAKE_INST_PUSH(0), MAKE_INST_DIV};
 
 int main() {
     vm_dump(stdout, &vm);
     for (size_t i = 0; i < ARRAY_SIZE(program); ++i) {
+        printf("%s\n", inst_type_as_cstr(program[i].type));
         Err tr = vm_execute_inst(&vm, program[i]);
         if (tr) {
-            fprintf(stderr, "Err activated: %s\n", error_as_cstr(tr));
+            fprintf(stderr, "ERROR: %s\n", error_as_cstr(tr));
             vm_dump(stderr, &vm);
             exit(EXIT_FAILURE);
         }
