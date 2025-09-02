@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Wall -Wextra -std=c11 -pedantic
+CFLAGS=-Wall -Wextra -Wswitch-enum -std=c11 -pedantic
 LDFLAGS=
 BIN=main
 
