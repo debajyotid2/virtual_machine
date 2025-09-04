@@ -6,7 +6,7 @@
 
 #define VM_STACK_CAPACITY 1024
 #define VM_PROGRAM_CAPACITY 65536
-#define VM_EXECUTION_LIMIT 20
+#define VM_EXECUTION_LIMIT 69
 typedef int64_t Word;
 
 typedef enum {
@@ -15,7 +15,8 @@ typedef enum {
   ERR_STACK_UNDERFLOW,
   ERR_ILLEGAL_INST,
   ERR_DIV_BY_ZERO,
-  ERR_ILLEGAL_INST_ACCESS
+  ERR_ILLEGAL_INST_ACCESS,
+  ERR_ILLEGAL_OPERAND
 } Err;
 
 const char *error_as_cstr(Err error) {
@@ -32,6 +33,8 @@ const char *error_as_cstr(Err error) {
         return "ERR_DIV_BY_ZERO";
     case ERR_ILLEGAL_INST_ACCESS:
         return "ERR_ILLEGAL_INST_ACCESS";
+    case ERR_ILLEGAL_OPERAND:
+        return "ERR_ILLEGAL_OPERAND";
     default:
         assert(0 && "error_as_cstr: Unreachable");
     }
@@ -47,7 +50,8 @@ typedef enum {
   INST_JMP_IF,
   INST_HALT,
   INST_EQ,
-  INST_PRINT_DEBUG
+  INST_DUP,
+  INST_PRINT_DEBUG,
 } InstType;
 
 typedef struct {
@@ -72,6 +76,7 @@ typedef struct {
 #define MAKE_INST_EQ {.type = INST_EQ}
 #define MAKE_INST_JMP(addr) {.type = INST_JMP, .operand = (addr)}
 #define MAKE_INST_JMP_IF(addr) {.type = INST_JMP_IF, .operand = (addr)}
+#define MAKE_INST_DUP(addr) {.type = INST_DUP, .operand = (addr)}
 #define MAKE_INST_HALT {.type = INST_HALT}
 
 const char *inst_type_as_cstr(InstType type) {
@@ -90,6 +95,8 @@ const char *inst_type_as_cstr(InstType type) {
         return "INST_JMP";
     case INST_JMP_IF:
         return "INST_JMP_IF";
+    case INST_DUP:
+        return "INST_DUP";
     case INST_HALT:
         return "INST_HALT";
     case INST_EQ:
@@ -174,6 +181,20 @@ Err vm_execute_inst(VM *vm) {
             vm->ip += 1;
         }
         break;
+    case INST_DUP:
+        if (vm->stack_size >= VM_STACK_CAPACITY) {
+            return ERR_STACK_OVERFLOW;
+        };
+        if (vm->stack_size - inst->operand <= 0) {
+            return ERR_STACK_UNDERFLOW;
+        }
+        if (inst->operand < 0) {
+            return ERR_ILLEGAL_OPERAND;
+        }
+        vm->stack[vm->stack_size] = vm->stack[vm->stack_size-1-inst->operand];
+        vm->stack_size += 1;
+        vm->ip += 1;
+        break;
     case INST_PRINT_DEBUG:
         if (vm->stack_size < 1) {
             return ERR_STACK_UNDERFLOW;
@@ -202,7 +223,14 @@ void vm_dump_stack(FILE *stream, const VM *vm) {
 #define ARRAY_SIZE(arg) (sizeof(arg) / sizeof((arg)[0]))
 
 VM vm = {0};
-Inst program[] = {MAKE_INST_PUSH(0), MAKE_INST_PUSH(1), MAKE_INST_PLUS, MAKE_INST_JMP(1)};
+Inst program[] = {
+    MAKE_INST_PUSH(0), 
+    MAKE_INST_PUSH(1), 
+    MAKE_INST_DUP(1),
+    MAKE_INST_DUP(1),
+    MAKE_INST_PLUS,
+    MAKE_INST_JMP(2)
+};
 
 void vm_push_inst(VM *vm, Inst inst) {
     assert(vm->program_size < VM_PROGRAM_CAPACITY);
