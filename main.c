@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #define VM_STACK_CAPACITY 1024
 #define VM_PROGRAM_CAPACITY 65536
@@ -241,6 +242,53 @@ void vm_load_program_from_memory(VM *vm, Inst *program, size_t program_size) {
     assert(program_size <= VM_PROGRAM_CAPACITY);
     memcpy(vm->program, program, sizeof(program[0]) * program_size);
     vm->program_size = program_size;
+}
+
+void vm_save_program_to_file(Inst* program, size_t program_size, const char* file_path) {
+    FILE* f = fopen(file_path, "wb");
+    if (f == NULL) {
+        fprintf(stderr, "ERROR: Could not open file '%s': %s\n", file_path, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+    fwrite(program, sizeof(program[0]), program_size, f);
+    if (ferror(f)) {
+        fprintf(stderr, "ERROR: Could not write to file '%s': %s\n", file_path, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+    fclose(f);
+}
+
+void vm_load_program_from_file(VM* vm, const char* file_path) {
+    FILE* f = fopen(file_path, "rb");
+    if (f == NULL) {
+        fprintf(stderr, "ERROR: Could not open file '%s': %s\n", file_path, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+
+    // Get file size
+    if (fseek(f, 0, SEEK_END) < 0) {
+        fprintf(stderr, "ERROR: Could not read file '%s': %s\n", file_path, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+    long res = ftell(f);
+    if (res < 0) {
+        fprintf(stderr, "ERROR: Could not read file '%s': %s\n", file_path, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+
+    // Check if the file size is a multiple of instruction size and is 
+    // within the capacity of the VM
+    assert(res % sizeof(vm->program[0]) == 0);
+    assert(res <= (long int)(VM_PROGRAM_CAPACITY * sizeof(vm->program[0])));
+
+    // Reset to the beginning of the file
+    if (fseek(f, 0, SEEK_SET) < 0) {
+        fprintf(stderr, "ERROR: Could not read file '%s': %s\n", file_path, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+
+    vm->program_size = fread(vm->program, sizeof(vm->program[0]), res / sizeof(vm->program[0]), f);
+    fclose(f);
 }
 
 int main() {
