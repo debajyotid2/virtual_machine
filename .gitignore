@@ -54,8 +54,13 @@ dkms.conf
 # debug information files
 *.dwo
 
-# main binary
+# binaries
 main
+evasm_to_vm
+vm_interpreter
+
+# VM intermediate files
+*.vm
 
 # VIM swap files
 *.swp

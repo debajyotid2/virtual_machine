@@ -3,13 +3,21 @@ CFLAGS=-Wall -Wextra -Wswitch-enum -std=c11 -pedantic
 LDFLAGS=
 BIN=vm_interpreter evasm_to_vm
 
+.PHONY: all examples clean
+
 all: $(BIN)
 
-vm_interpreter: vm_interpreter.c vm.h
+%: %.c vm.h
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
-evasm_to_vm: evasm_to_vm.c vm.h
-	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+EXAMPLES_DIR=./examples
+EXAMPLES=$(wildcard $(EXAMPLES_DIR)/*.evasm)
+EXAMPLE_TARGETS=$(patsubst %.evasm,%.vm,$(EXAMPLES))
+
+examples: $(EXAMPLE_TARGETS)
+
+$(EXAMPLES_DIR)/%.vm: $(EXAMPLES_DIR)/%.evasm
+	./evasm_to_vm $^ $@
 
 clean:
-	rm -rf $(BIN)
+	rm -rf $(BIN) $(EXAMPLE_TARGETS)
