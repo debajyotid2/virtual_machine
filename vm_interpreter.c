@@ -1,12 +1,16 @@
 #include "vm.h"
 #include <stdio.h>
 
-VM   vm = {0};
-Inst program[] = {MAKE_INST_PUSH(0), MAKE_INST_PUSH(1), MAKE_INST_DUP(1),
-                  MAKE_INST_DUP(1),  MAKE_INST_PLUS,    MAKE_INST_JMP(2)};
+int main(int argc, char **argv) {
+    if (argc < 2) {
+        fprintf(stderr, "ERROR: Usage: %s <input.vm>\n",
+                argv[0]);
+        exit(EXIT_FAILURE);
+    }
+    const char *input_file_path = argv[1];
 
-int main(void) {
-    vm_load_program_from_memory(&vm, program, ARRAY_SIZE(program));
+    VM   vm = {0};
+    vm_load_program_from_file(&vm, input_file_path);
     vm_dump_stack(stdout, &vm);
     for (int i = 0; i < VM_EXECUTION_LIMIT && !vm.halt; ++i) {
         Err tr = vm_execute_inst(&vm);
