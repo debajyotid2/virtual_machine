@@ -208,6 +208,7 @@ void inst_print(Inst inst) {
     return;
 }
 
+
 Err vm_execute_inst(VM *vm) {
     if (vm->ip < 0 || vm->ip >= (int)vm->program_size) {
         return ERR_ILLEGAL_INST_ACCESS;
@@ -310,6 +311,16 @@ Err vm_execute_inst(VM *vm) {
         break;
     default:
         return ERR_ILLEGAL_INST;
+    }
+    return ERR_OK;
+}
+
+Err vm_execute_program(VM* vm, int limit) {
+    for (int i = 0; i < limit && !vm->halt; ++i) {
+        Err tr = vm_execute_inst(vm);
+        if (tr != ERR_OK) {
+            return tr;
+        }
     }
     return ERR_OK;
 }
