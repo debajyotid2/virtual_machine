@@ -184,6 +184,30 @@ const char *inst_type_as_cstr(InstType type) {
     }
 }
 
+void inst_print(Inst inst) {
+    switch (inst.type) {
+    case INST_PUSH:
+    case INST_DUP:
+    case INST_JMP:
+    case INST_JMP_IF:
+        printf("%s %ld\n", inst_type_as_cstr(inst.type), inst.operand);
+        break;
+    case INST_PLUS:
+    case INST_MINUS:
+    case INST_MULT:
+    case INST_DIV:
+    case INST_HALT:
+    case INST_EQ:
+    case INST_PRINT_DEBUG:
+    case INST_NOP:
+        printf("%s\n", inst_type_as_cstr(inst.type));
+        break;
+    default:
+        assert(0 && "vm_print_inst: Unreachable");
+    }
+    return;
+}
+
 Err vm_execute_inst(VM *vm) {
     if (vm->ip < 0 || vm->ip >= (int)vm->program_size) {
         return ERR_ILLEGAL_INST_ACCESS;
@@ -402,15 +426,14 @@ Inst vm_translate_line(StringView line) {
     return (Inst){0};
 }
 
-size_t vm_translate_source(StringView source, Inst *program,
-                           size_t program_capacity) {
+size_t vm_translate_source(VM* vm, StringView source) {
     size_t program_size = 0;
     while (source.count > 0) {
-        assert(program_size < program_capacity);
+        assert(program_size < VM_PROGRAM_CAPACITY);
         StringView line = sv_trim(sv_chop_by_delim(&source, '\n'));
         // Skip empty lines
         if (line.count > 0) {
-            program[program_size++] = vm_translate_line(line);
+            vm->program[vm->program_size++] = vm_translate_line(line);
         }
     }
     return program_size;

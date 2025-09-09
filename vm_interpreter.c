@@ -3,13 +3,12 @@
 
 int main(int argc, char **argv) {
     if (argc < 2) {
-        fprintf(stderr, "ERROR: Usage: %s <input.vm>\n",
-                argv[0]);
+        fprintf(stderr, "ERROR: Usage: %s <input.vm>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
     const char *input_file_path = argv[1];
 
-    VM   vm = {0};
+    VM vm = {0};
     vm_load_program_from_file(&vm, input_file_path);
     vm_dump_stack(stdout, &vm);
     for (int i = 0; i < VM_EXECUTION_LIMIT && !vm.halt; ++i) {
