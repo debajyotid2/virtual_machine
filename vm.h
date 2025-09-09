@@ -156,29 +156,29 @@ typedef struct {
 const char *inst_type_as_cstr(InstType type) {
     switch (type) {
     case INST_PUSH:
-        return "INST_PUSH";
+        return "push";
     case INST_PLUS:
-        return "INST_PLUS";
+        return "plus";
     case INST_MINUS:
-        return "INST_MINUS";
+        return "minus";
     case INST_MULT:
-        return "INST_MULT";
+        return "mult";
     case INST_DIV:
-        return "INST_DIV";
+        return "div";
     case INST_JMP:
-        return "INST_JMP";
+        return "jmp";
     case INST_JMP_IF:
-        return "INST_JMP_IF";
+        return "jmp_if";
     case INST_DUP:
-        return "INST_DUP";
+        return "dup";
     case INST_HALT:
-        return "INST_HALT";
+        return "halt";
     case INST_EQ:
-        return "INST_EQ";
+        return "eq";
     case INST_PRINT_DEBUG:
-        return "INST_PRINT_DEBUG";
+        return "print_debug";
     case INST_NOP:
-        return "INST_NOP";
+        return "nop";
     default:
         assert(0 && "inst_type_as_cstr: Unreachable");
     }

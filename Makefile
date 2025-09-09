@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-Wall -Wextra -Wswitch-enum -std=c11 -pedantic
 LDFLAGS=
-BIN=vm_interpreter vasm_to_vm
+BIN=vm_interpreter vasm_to_vm devasm
 
 .PHONY: all examples clean
 
