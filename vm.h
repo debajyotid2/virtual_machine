@@ -312,7 +312,7 @@ void vm_load_program_from_memory(VM *vm, Inst *program, size_t program_size) {
     vm->program_size = program_size;
 }
 
-void vm_save_program_to_file(Inst *program, size_t program_size,
+void vm_save_program_to_file(VM* vm,
                              const char *file_path) {
     FILE *f = fopen(file_path, "wb");
     if (f == NULL) {
@@ -320,7 +320,7 @@ void vm_save_program_to_file(Inst *program, size_t program_size,
                 strerror(errno));
         exit(EXIT_FAILURE);
     }
-    fwrite(program, sizeof(program[0]), program_size, f);
+    fwrite(vm->program, sizeof(vm->program[0]), vm->program_size, f);
     if (ferror(f)) {
         fprintf(stderr, "ERROR: Could not write to file '%s': %s\n", file_path,
                 strerror(errno));
