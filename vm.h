@@ -404,19 +404,16 @@ void vm_load_program_from_file(VM *vm, const char *file_path) {
 Inst vm_translate_line(StringView line) {
     line = sv_trim_left(line);
     StringView inst_name = sv_chop_by_delim(&line, ' ');
+    int operand = sv_to_int(sv_trim(sv_chop_by_delim(&line, '#')));
 
     if (sv_eq(inst_name, cstr_as_sv("push"))) {
-        int operand = sv_to_int(sv_trim(line));
         return (Inst)MAKE_INST_PUSH(operand);
     } else if (sv_eq(inst_name, cstr_as_sv("dup"))) {
-        int addr = sv_to_int(sv_trim(line));
-        return (Inst)MAKE_INST_DUP(addr);
+        return (Inst)MAKE_INST_DUP(operand);
     } else if (sv_eq(inst_name, cstr_as_sv("jmp"))) {
-        int addr = sv_to_int(sv_trim(line));
-        return (Inst)MAKE_INST_JMP(addr);
+        return (Inst)MAKE_INST_JMP(operand);
     } else if (sv_eq(inst_name, cstr_as_sv("jmp_if"))) {
-        int addr = sv_to_int(sv_trim(line));
-        return (Inst)MAKE_INST_JMP_IF(addr);
+        return (Inst)MAKE_INST_JMP_IF(operand);
     } else if (sv_eq(inst_name, cstr_as_sv("plus"))) {
         return (Inst)MAKE_INST_PLUS;
     } else if (sv_eq(inst_name, cstr_as_sv("minus"))) {
@@ -442,8 +439,8 @@ size_t vm_translate_source(VM* vm, StringView source) {
     while (source.count > 0) {
         assert(program_size < VM_PROGRAM_CAPACITY);
         StringView line = sv_trim(sv_chop_by_delim(&source, '\n'));
-        // Skip empty lines
-        if (line.count > 0) {
+        // Skip empty lines and line level comments
+        if (line.count > 0 && line.data[0] != '#') {
             vm->program[vm->program_size++] = vm_translate_line(line);
         }
     }

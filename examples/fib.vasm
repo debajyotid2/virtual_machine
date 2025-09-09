@@ -1,0 +1,7 @@
+# Fibonacci series generator
+push 0  # First Fibonacci number
+push 1  # Second Fibonacci number
+dup 1   # Duplicate prev
+dup 1   # Duplicate prev
+plus    # Add top two in stack
+jmp 2   # Jump to instruction 2
