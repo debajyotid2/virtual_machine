@@ -114,7 +114,7 @@ const char *error_as_cstr(Err error) {
 }
 
 typedef enum {
-    INST_NO_OP = 0,
+    INST_NOP = 0,
     INST_PUSH,
     INST_PLUS,
     INST_MINUS,
@@ -177,8 +177,8 @@ const char *inst_type_as_cstr(InstType type) {
         return "INST_EQ";
     case INST_PRINT_DEBUG:
         return "INST_PRINT_DEBUG";
-    case INST_NO_OP:
-        return "INST_NO_OP";
+    case INST_NOP:
+        return "INST_NOP";
     default:
         assert(0 && "inst_type_as_cstr: Unreachable");
     }
@@ -281,7 +281,7 @@ Err vm_execute_inst(VM *vm) {
         vm->stack_size -= 1;
         vm->ip += 1;
         break;
-    case INST_NO_OP:
+    case INST_NOP:
         vm->ip += 1;
         break;
     default:
@@ -312,8 +312,7 @@ void vm_load_program_from_memory(VM *vm, Inst *program, size_t program_size) {
     vm->program_size = program_size;
 }
 
-void vm_save_program_to_file(VM* vm,
-                             const char *file_path) {
+void vm_save_program_to_file(VM *vm, const char *file_path) {
     FILE *f = fopen(file_path, "wb");
     if (f == NULL) {
         fprintf(stderr, "ERROR: Could not open file '%s': %s\n", file_path,
