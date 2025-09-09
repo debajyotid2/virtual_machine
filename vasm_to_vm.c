@@ -3,7 +3,7 @@
 
 int main(int argc, char **argv) {
     if (argc < 3) {
-        fprintf(stderr, "ERROR: Usage: %s <input.evasm> <output.vm>\n",
+        fprintf(stderr, "ERROR: Usage: %s <input.vasm> <output.vm>\n",
                 argv[0]);
         exit(EXIT_FAILURE);
     }
